@@ -1,0 +1,9 @@
+node_modules/
+web/dist/
+web/public/data/*
+!web/public/data/.gitkeep
+chanel-finder/.venv/
+chanel-finder/__pycache__/
+chanel-finder/cache/
+*.pyc
+.DS_Store

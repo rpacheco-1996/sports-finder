@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+cache/
+maps/
+506_*.html
+506_*.txt
