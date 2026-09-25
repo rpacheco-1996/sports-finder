@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// GitHub Pages sets VITE_BASE to the project path, e.g. /sports-finder/.
+// Project site: https://rpacheco-1996.github.io/sports-finder/
 export default defineConfig({
-  base: process.env.VITE_BASE || "/",
+  base: "/sports-finder/",
   plugins: [react()],
   server: {
     port: 5173,

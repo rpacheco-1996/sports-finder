@@ -23,12 +23,9 @@ Set a Patreon (or any support) link in `web/src/config.ts`.
 
 ## GitHub Pages
 
-The workflow in `.github/workflows/pages.yml` refreshes the NFL maps and deploys on every push to `main`, plus Wednesday and Saturday. Turn it on once:
+Pages publishes the `main` branch root. `npm run build` writes that site (`index.html` and `assets/`). `.nojekyll` keeps Jekyll from turning this repo into a README page.
 
-1. Repo **Settings → Pages**
-2. **Build and deployment → Source: GitHub Actions**
-
-The published URL is `https://rpacheco-1996.github.io/sports-finder/`.
+The live app is [https://rpacheco-1996.github.io/sports-finder/](https://rpacheco-1996.github.io/sports-finder/).
 
 Listings are unofficial. FOX and CBS markets come from [506sports](https://506sports.com) coverage maps; kickoff times and other sports come from ESPN.
 
