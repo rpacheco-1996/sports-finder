@@ -16,8 +16,10 @@ from __future__ import annotations
 
 import argparse
 import html
+import http.client
 import json
 import re
+import ssl
 import sys
 import time
 import urllib.error
@@ -34,16 +36,63 @@ CACHE = Path(__file__).resolve().parent / "cache" / "listings"
 SITEMAP = "https://www.tvpassport.com/sitemap.stations.xml"
 ESPN = "https://site.web.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2"
 PAUSE = 1.25
+READ_TIMEOUT = 10
 NETWORKS = ("FOX", "CBS", "NBC", "ABC")
 UA = "ChannelFinder/1.0 (personal local-TV lookup; one request at a time)"
 
 ITEM = re.compile(r'<div\b([^>]*\blist-group-item\b[^>]*)>', re.I)
 
 
+def polite_get(url: str) -> tuple[str, str]:
+    """Fetch one page. A bad host returns (url, "") so the build can keep going."""
+    request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "text/html,application/json"})
+    for attempt in range(2):
+        try:
+            with urllib.request.urlopen(request, timeout=READ_TIMEOUT) as response:
+                try:
+                    body = response.read()
+                except http.client.IncompleteRead as error:
+                    partial = error.partial or b""
+                    if partial:
+                        print(f"Warning: truncated response from {url}. Using the partial page.", flush=True)
+                        return response.geturl(), partial.decode("utf-8", "replace")
+                    print(f"Warning: truncated response from {url}. Skipping this station site.", flush=True)
+                    return url, ""
+                return response.geturl(), body.decode("utf-8", "replace")
+        except urllib.error.HTTPError as error:
+            if error.code == 429 and attempt == 0:
+                print(f"Warning: HTTP 429 from {url}. Pausing, then retrying once.", flush=True)
+                time.sleep(20)
+                continue
+            print(f"Warning: HTTP {error.code} from {url}. Skipping this station site.", flush=True)
+            return url, ""
+        except http.client.IncompleteRead as error:
+            partial = error.partial or b""
+            if partial:
+                print(f"Warning: truncated response from {url}. Using the partial page.", flush=True)
+                return url, partial.decode("utf-8", "replace")
+            if attempt == 0:
+                time.sleep(1)
+                continue
+            print(f"Warning: truncated response from {url}. Skipping this station site.", flush=True)
+            return url, ""
+        except (urllib.error.URLError, http.client.HTTPException, ssl.SSLError, TimeoutError, ConnectionError, OSError) as error:
+            if attempt == 0:
+                time.sleep(1)
+                continue
+            print(f"Warning: could not read {url}: {error}. Skipping this station site.", flush=True)
+            return url, ""
+        except Exception as error:
+            print(f"Warning: could not read {url}: {error}. Skipping this station site.", flush=True)
+            return url, ""
+    return url, ""
+
+
 def get(url: str) -> str:
-    request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "text/html,application/xml"})
-    with urllib.request.urlopen(request, timeout=45) as response:
-        return response.read().decode("utf-8", "replace")
+    _final, body = polite_get(url)
+    if not body:
+        raise urllib.error.URLError(f"empty response from {url}")
+    return body
 
 
 def attr(blob: str, name: str) -> str:
@@ -157,23 +206,11 @@ LISTING_LINK = re.compile(r"tv-?listings|/listings\b|tvguide", re.I)
 SKIP_HOSTS = ("tvpassport.", "tvmedia.", "google.", "facebook.", "amazon.", "doubleclick.", "googletagmanager.")
 
 
-def polite_get(url: str) -> tuple[str, str]:
-    request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "text/html,application/json"})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return response.geturl(), response.read().decode("utf-8", "replace")
-
-
 def open_station(url: str) -> tuple[str, str]:
-    try:
-        return polite_get(url)
-    except urllib.error.HTTPError as error:
-        if error.code not in (403, 404) or not url.startswith("http://"):
-            raise
-        return polite_get("https://" + url[len("http://") :])
-    except (urllib.error.URLError, TimeoutError):
-        if not url.startswith("http://"):
-            raise
-        return polite_get("https://" + url[len("http://") :])
+    final, body = polite_get(url)
+    if body or not url.startswith("http://"):
+        return final, body
+    return polite_get("https://" + url[len("http://") :])
 
 
 def pause() -> None:
@@ -339,7 +376,7 @@ def enrich_from_stations(
                 else:
                     print(f"No guide page for {host} ({error.code}).", flush=True)
                     site_id = ""
-            except (urllib.error.URLError, TimeoutError) as error:
+            except Exception as error:
                 print(f"Could not read {website}: {error}.", flush=True)
                 site_id = ""
             if page:
@@ -359,7 +396,7 @@ def enrich_from_stations(
                             if error.code == 429:
                                 print(f"HTTP 429 on {link}. Pausing, then moving on.", flush=True)
                                 time.sleep(20)
-                        except (urllib.error.URLError, TimeoutError) as error:
+                        except Exception as error:
                             print(f"Could not read {link}: {error}.", flush=True)
             cached = {
                 "siteid": site_id,
@@ -521,16 +558,10 @@ def main() -> int:
             page_url = f"{url}/{day}"
             try:
                 page = get(page_url)
-            except urllib.error.HTTPError as error:
-                if error.code in (404, 410):
-                    print(f"No page for {key} on {day}.", flush=True)
-                    time.sleep(PAUSE)
-                    continue
-                print(f"HTTP {error.code} on {page_url}. Stopping so we don't hammer the site.", flush=True)
-                break
-            except (urllib.error.URLError, TimeoutError) as error:
-                print(f"Failed {page_url}: {error}. Stopping.", flush=True)
-                break
+            except Exception as error:
+                print(f"Could not read {page_url}: {error}. Skipping.", flush=True)
+                time.sleep(PAUSE)
+                continue
             rows = nfl_rows(page)
             cache_path.write_text(json.dumps(rows))
             fetched += 1
