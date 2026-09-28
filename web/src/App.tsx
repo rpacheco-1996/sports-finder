@@ -1,10 +1,11 @@
 import { type FormEvent, useState } from "react";
 import { site } from "./config";
 import { TEAMS } from "./data/teams";
+import { PlaceSearch } from "./components/PlaceSearch";
 import { Results, Skeleton } from "./components/Results";
+import { loadPlaces, placeByZip } from "./lib/places";
 import { MAJOR_NETWORKS, callsignFor } from "./lib/stations";
 import { useGuide } from "./lib/useGuide";
-import { normalizeZip } from "./lib/zip";
 import { formatWhen } from "./lib/time";
 import type { Listing } from "./types";
 
@@ -63,7 +64,6 @@ export function App() {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
-    void guide.submitZip();
   }
 
   const showLocalTab = guide.sport.id === "nfl" && guide.mapsApply;
@@ -86,20 +86,7 @@ export function App() {
 
       <form className="finder" onSubmit={onSubmit}>
         <div className="finder-grid">
-          <label className="field">
-            <span>Zip code</span>
-            <input
-              inputMode="numeric"
-              autoComplete="postal-code"
-              name="zip"
-              placeholder="83702"
-              value={guide.zipInput}
-              onChange={(event) => guide.setZipInput(event.target.value)}
-              onBlur={() => {
-                if (normalizeZip(guide.zipInput)) void guide.submitZip();
-              }}
-            />
-          </label>
+          <PlaceSearch selectedLabel={guide.place ? guide.zipInput : ""} onSelect={guide.selectPlace} />
           <label className="field">
             <span>Sport</span>
             <select
@@ -126,9 +113,6 @@ export function App() {
               </select>
             </label>
           )}
-          <button className="primary" type="submit">
-            Show games
-          </button>
         </div>
         {guide.zipError && <p className="field-error" role="alert">{guide.zipError}</p>}
         {guide.place && (
@@ -144,7 +128,16 @@ export function App() {
           <div className="examples">
             <span>Try</span>
             {EXAMPLES.map((example) => (
-              <button key={example.zip} type="button" onClick={() => void guide.submitZip(example.zip)}>
+              <button
+                key={example.zip}
+                type="button"
+                onClick={() => {
+                  void loadPlaces().then((places) => {
+                    const found = placeByZip(places, example.zip);
+                    if (found) guide.selectPlace(found);
+                  });
+                }}
+              >
                 {example.label}
               </button>
             ))}
@@ -204,8 +197,8 @@ export function App() {
       <footer>
         <p>
           Local FOX and CBS games come from unofficial <a href="https://506sports.com">506sports</a> coverage maps.
-          Station names come from public Wikipedia lists and are saved in this browser after the first lookup.
-          Times come from ESPN. Confirm the game in your provider’s guide.
+          Station call signs and channel numbers come from <a href="https://www.rabbitears.info/">RabbitEars</a>.
+          City and zip locations come from GeoNames. Times come from ESPN. Confirm the game in your provider’s guide.
         </p>
         {site.supportUrl && (
           <a className="support" href={site.supportUrl}>

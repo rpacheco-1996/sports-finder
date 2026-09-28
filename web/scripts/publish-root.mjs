@@ -18,6 +18,9 @@ cpSync(resolve(dist, "index.html"), resolve(root, "index.html"));
 if (existsSync(resolve(dist, "favicon.svg"))) {
   cpSync(resolve(dist, "favicon.svg"), resolve(root, "favicon.svg"));
 }
+if (existsSync(resolve(dist, "places.txt"))) {
+  cpSync(resolve(dist, "places.txt"), resolve(root, "places.txt"));
+}
 cpSync(resolve(dist, "assets"), resolve(root, "assets"), { recursive: true });
 if (existsSync(resolve(dist, "data"))) {
   mkdirSync(resolve(root, "data"), { recursive: true });

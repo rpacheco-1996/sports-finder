@@ -7,8 +7,9 @@ import { type EspnGame, loadScoreboard } from "./espn";
 import { buildListings } from "./guide";
 import { sampleMarket } from "./sample";
 import { formatDayHeading, shiftDay, todayKey } from "./time";
-import { cachedMarket, lookupStations, type MarketRecord } from "./stations";
-import { lookupZip, normalizeZip } from "./zip";
+import { loadPlaces, placeByZip, placeLabel } from "./places";
+import { loadMarkets, marketFor, type MarketRecord } from "./stations";
+import { normalizeZip } from "./zip";
 
 const PREFS_KEY = "cf.prefs.v1";
 
@@ -84,21 +85,32 @@ export function useGuide() {
 
   useEffect(() => {
     const zip = normalizeZip(initial.zip);
-    if (!zip) return;
-    const controller = new AbortController();
-    lookupZip(zip, controller.signal)
-      .then((found) => {
-        if (found) setPlace(found);
-        else setZipError("No US city found for that zip code.");
+    if (!zip) {
+      setZipReady(true);
+      return;
+    }
+    let cancel = false;
+    loadPlaces()
+      .then((places) => {
+        if (cancel) return;
+        const found = placeByZip(places, zip);
+        if (found) {
+          setPlace(found);
+          setZipInput(placeLabel(found));
+        } else {
+          setZipError("No US city found for that zip code.");
+        }
+        setZipReady(true);
       })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setZipError("Couldn’t look up that zip code. Try again.");
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setZipReady(true);
+      .catch(() => {
+        if (!cancel) {
+          setZipError("Couldn’t load the place list. Try again.");
+          setZipReady(true);
+        }
       });
-    return () => controller.abort();
+    return () => {
+      cancel = true;
+    };
   }, [initial.zip]);
 
   useEffect(() => {
@@ -107,25 +119,24 @@ export function useGuide() {
       setStationsStatus("idle");
       return;
     }
-    const remembered = cachedMarket(place.zip);
-    if (remembered) {
-      setMarket(remembered);
-      setStationsStatus("ready");
-      return;
-    }
-    const controller = new AbortController();
+    let cancel = false;
     setStationsStatus("loading");
-    lookupStations(place, controller.signal)
-      .then((record) => {
+    loadMarkets()
+      .then((markets) => {
+        if (cancel) return;
+        const record = marketFor(place, markets);
         setMarket(record);
         setStationsStatus(record ? "ready" : "missing");
       })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setMarket(null);
-        setStationsStatus("missing");
+      .catch(() => {
+        if (!cancel) {
+          setMarket(null);
+          setStationsStatus("missing");
+        }
       });
-    return () => controller.abort();
+    return () => {
+      cancel = true;
+    };
   }, [place]);
 
   useEffect(() => {
@@ -219,27 +230,11 @@ export function useGuide() {
     );
   }, [zipReady, place, sport.id, sport.schedule, team, shownWeek, day]);
 
-  async function submitZip(raw = zipInput) {
-    const zip = normalizeZip(raw);
-    if (!zip) {
-      setZipError("Enter a 5-digit US zip code.");
-      setPlace(null);
-      return;
-    }
-    setZipInput(zip);
+  function selectPlace(next: Place) {
+    setPlace(next);
+    setZipInput(placeLabel(next));
     setZipError("");
-    try {
-      const found = await lookupZip(zip);
-      if (!found) {
-        setPlace(null);
-        setZipError("No US city found for that zip code.");
-        return;
-      }
-      setPlace(found);
-      setView("local");
-    } catch {
-      setZipError("Couldn’t look up that zip code. Try again.");
-    }
+    setView("local");
   }
 
   function step(delta: number) {
@@ -266,7 +261,7 @@ export function useGuide() {
     },
     zipInput,
     setZipInput,
-    submitZip,
+    selectPlace,
     zipError,
     place,
     market,

@@ -2,6 +2,7 @@ node_modules/
 web/dist/
 web/public/data/*
 !web/public/data/.gitkeep
+!web/public/data/markets.json
 chanel-finder/.venv/
 chanel-finder/__pycache__/
 chanel-finder/cache/
