@@ -3,6 +3,7 @@ web/dist/
 web/public/data/*
 !web/public/data/.gitkeep
 !web/public/data/markets.json
+!web/public/data/listings.json
 chanel-finder/.venv/
 chanel-finder/__pycache__/
 chanel-finder/cache/

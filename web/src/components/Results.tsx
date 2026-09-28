@@ -49,16 +49,25 @@ function GameRow({
   return (
     <article className={`game${game.followed ? " is-followed" : ""}${game.state === "in" ? " is-live" : ""}`}>
       <div className="when">
-        <span className="clock">{when.timeLabel}</span>
+        {game.sourceUrl ? (
+          <a className="clock" href={game.sourceUrl} target="_blank" rel="noreferrer">
+            {when.timeLabel}
+            <span className="sr-only">, open the station site to confirm</span>
+          </a>
+        ) : (
+          <span className="clock">{when.timeLabel}</span>
+        )}
         {game.state !== "pre" && <span className="status">{game.detail}</span>}
       </div>
       <div className="matchup">
         <p className="side">
+          {game.away.logo ? <img className="logo" src={game.away.logo} alt="" width="28" height="28" /> : <span className="logo" />}
           <span className={game.away.winner ? "is-winner" : undefined}>{game.away.short || game.away.name}</span>
           {game.away.score && <span className="score">{game.away.score}</span>}
         </p>
         {home && (
           <p className="side">
+            {game.home.logo ? <img className="logo" src={game.home.logo} alt="" width="28" height="28" /> : <span className="logo" />}
             <span className={game.home.winner ? "is-winner" : undefined}>{game.home.short || game.home.name}</span>
             {game.home.score && <span className="score">{game.home.score}</span>}
             <span className="sr-only">{game.neutral ? "versus" : "at"}</span>
@@ -74,7 +83,7 @@ function GameRow({
         <div className="nets">
           {game.networks.length === 0 && <span className="net" data-net="other">TBD</span>}
           {game.networks.map((network) => {
-            const callsign = callsignFor(network, stations);
+            const callsign = game.bucket === "local" ? callsignFor(network, stations) : null;
             return (
               <span className="net" data-net={netSlug(network)} key={network}>
                 {callsign ? `${callsign} · ${network}` : network}
@@ -132,7 +141,7 @@ export function Results({
   timeZone,
   city,
   checking,
-  mapsApply,
+  localReady,
   stations,
 }: {
   games: Listing[];
@@ -140,10 +149,10 @@ export function Results({
   timeZone: string;
   city: string;
   checking: boolean;
-  mapsApply: boolean;
+  localReady: boolean;
   stations: Station[];
 }) {
-  if (view === "local" && mapsApply) {
+  if (view === "local" && localReady) {
     const local = games.filter((game) => game.bucket === "local");
     const national = games.filter((game) => game.bucket === "national");
     return (
@@ -173,7 +182,7 @@ export function Results({
 
   return (
     <div className="results">
-      <DayList games={games} timeZone={timeZone} city={city} showBadge={mapsApply || checking} checking={checking} stations={stations} />
+      <DayList games={games} timeZone={timeZone} city={city} showBadge={localReady || checking} checking={checking} stations={stations} />
     </div>
   );
 }

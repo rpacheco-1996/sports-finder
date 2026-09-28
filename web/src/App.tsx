@@ -21,7 +21,7 @@ function regionalNet(networks: string[]): string {
   return "";
 }
 
-function teamLine(games: Listing[], teamName: string, timeZone: string, city: string, mapsApply: boolean): string {
+function teamLine(games: Listing[], teamName: string, timeZone: string, city: string, localReady: boolean): string {
   const game = games.find((item) => item.followed);
   const name = `The ${teamName}`;
   if (!game) return `${name} have no game on this slate.`;
@@ -40,8 +40,8 @@ function teamLine(games: Listing[], teamName: string, timeZone: string, city: st
   }
   if (game.bucket === "local" && city) return `${name} play ${whenText} on ${on}. It’s on in ${city}.`;
   if (game.bucket === "national") return `${name} play ${whenText} on ${on}.`;
-  if (!mapsApply && (regionalNet(game.networks) === "FOX" || regionalNet(game.networks) === "CBS")) {
-    return `${name} play ${whenText} on ${on}. Add a zip code to see if that game is in your market.`;
+  if (!localReady && (regionalNet(game.networks) === "FOX" || regionalNet(game.networks) === "CBS")) {
+    return `${name} play ${whenText} on ${on}. Pick a city to see if that game is on the local station.`;
   }
   return `${name} play ${whenText} on ${on}.`;
 }
@@ -66,7 +66,7 @@ export function App() {
     event.preventDefault();
   }
 
-  const showLocalTab = guide.sport.id === "nfl" && guide.mapsApply;
+  const showLocalTab = guide.sport.id === "nfl" && guide.localReady;
   const note = marketNote(guide);
 
   return (
@@ -147,7 +147,7 @@ export function App() {
 
       {guide.followed && !guide.scheduleLoading && (
         <p className="banner">
-          {teamLine(guide.listings, guide.followed.name, timeZone, city, guide.mapsApply)}
+          {teamLine(guide.listings, guide.followed.name, timeZone, city, guide.localReady)}
         </p>
       )}
 
@@ -174,6 +174,14 @@ export function App() {
             </button>
           </div>
         )}
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => guide.refreshSchedule()}
+          disabled={guide.scheduleLoading}
+        >
+          {guide.scheduleLoading ? "Refreshing…" : "Refresh schedule"}
+        </button>
       </div>
 
       {note && <p className="note">{note}</p>}
@@ -189,15 +197,16 @@ export function App() {
           timeZone={timeZone}
           city={city}
           checking={guide.checking}
-          mapsApply={guide.mapsApply}
+          localReady={guide.localReady}
           stations={guide.market?.stations ?? []}
         />
       )}
 
       <footer>
         <p>
-          Local FOX and CBS games come from unofficial <a href="https://506sports.com">506sports</a> coverage maps.
-          Station call signs and channel numbers come from <a href="https://www.rabbitears.info/">RabbitEars</a>.
+          A time on a local game links to that station’s website so you can confirm it.
+          Listings come from the station’s own guide when it publishes one.
+          Call signs and channel numbers come from <a href="https://www.rabbitears.info/">RabbitEars</a>.
           City and zip locations come from GeoNames. Times come from ESPN. Confirm the game in your provider’s guide.
         </p>
         {site.supportUrl && (
@@ -236,15 +245,14 @@ function StationLine({
 function marketNote(guide: ReturnType<typeof useGuide>): string {
   const city = guide.place?.city;
   if (guide.sport.id !== "nfl") {
-    return "Local channel maps are available for the NFL. This list shows the network each game is on.";
+    return "Station schedules on this page cover NFL games. This list shows the network each game is on.";
   }
-  if (guide.checking && city) return `Checking the coverage map for ${city}…`;
-  if (guide.mapMiss) return "This zip sits off the coverage map, so FOX and CBS markets are unmarked. National games are still listed.";
-  if (guide.mapsApply) return "";
-  if (guide.coverageStatus === "missing") return "Coverage maps aren’t published on this page yet, so FOX and CBS markets are unmarked.";
-  if (guide.onMappedWeek && !guide.place) return "Enter a zip code to see which FOX and CBS games are in that market.";
-  if (guide.mappedWeek && !guide.onMappedWeek) {
-    return `Local FOX and CBS maps on this page are for Week ${guide.mappedWeek}. This list is the full schedule.`;
+  if (guide.checking && city) return `Reading the station schedules for ${city}…`;
+  if (guide.localReady) return "";
+  if (guide.listingsStatus === "missing") return "Station schedules aren’t published on this page yet, so local FOX and CBS games are unmarked.";
+  if (guide.onListedWeek && !guide.place) return "Enter a city or zip to see which games are on the local stations.";
+  if (guide.listedWeek && !guide.onListedWeek) {
+    return "Local station maps are optimized for the current NFL week.";
   }
   return "";
 }

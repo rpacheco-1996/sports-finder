@@ -366,6 +366,13 @@ button { cursor: pointer; }
   font-weight: 600;
 }
 
+a.clock {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+a.clock:hover { color: var(--accent); }
+
 .status { color: var(--muted); font-size: 13px; }
 
 .game.is-live .status { color: var(--live); font-weight: 600; }
@@ -374,10 +381,16 @@ button { cursor: pointer; }
 
 .side {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 28px 1fr auto;
   gap: 10px;
   align-items: center;
   margin: 0;
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 
 .side .is-winner { font-weight: 600; }

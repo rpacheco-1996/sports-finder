@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { teamByAbbr } from "../data/teams";
-import type { Coverage, Place, SportId } from "../types";
+import type { Place, SportId } from "../types";
 import { SPORTS, sportById } from "../types";
-import { loadCoverage } from "./coverageData";
 import { type EspnGame, loadScoreboard } from "./espn";
 import { buildListings } from "./guide";
-import { sampleMarket } from "./sample";
+import { listingsForWeek, loadListings, type StationListings } from "./listings";
 import { formatDayHeading, shiftDay, todayKey } from "./time";
 import { loadPlaces, placeByZip, placeLabel } from "./places";
 import { loadMarkets, marketFor, type MarketRecord } from "./stations";
@@ -50,37 +49,51 @@ export function useGuide() {
   const [cfbWeek, setCfbWeek] = useState<number | null>(initial.cfbWeek);
   const [day, setDay] = useState(initial.day);
   const [view, setView] = useState<View>("local");
-  const [coverage, setCoverage] = useState<Coverage | null>(null);
-  const [coverageStatus, setCoverageStatus] = useState<"loading" | "ready" | "missing">("loading");
-  const [samples, setSamples] = useState<Record<string, number | null> | null>(null);
-  const [checking, setChecking] = useState(false);
+  const [listings, setStationListings] = useState<StationListings | null>(null);
+  const [listingsStatus, setListingsStatus] = useState<"loading" | "ready" | "missing">("loading");
   const [board, setBoard] = useState<{ key: string; games: EspnGame[] }>({ key: "", games: [] });
   const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
   const [espnWeek, setEspnWeek] = useState<number | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const forceRefresh = useRef(false);
   const [zipReady, setZipReady] = useState(() => !normalizeZip(initial.zip));
   const [market, setMarket] = useState<MarketRecord | null>(null);
   const [stationsStatus, setStationsStatus] = useState<"idle" | "loading" | "ready" | "missing">("idle");
 
   const sport = sportById(sportId);
   const shownWeek = sport.id === "nfl" ? nflWeek : cfbWeek ?? espnWeek;
-  const hasSample = Boolean(samples && Object.values(samples).some((swatch) => swatch != null));
-  const mapsApply = Boolean(
-    sport.id === "nfl" && coverage && place && hasSample && nflWeek === coverage.week,
+  const activeListings = useMemo(() => {
+    if (sport.id === "nfl" && nflWeek != null) {
+      if (listings?.week === nflWeek) return listings;
+      return listingsForWeek(nflWeek);
+    }
+    return listings;
+  }, [sport.id, nflWeek, listings]);
+  const localReady = Boolean(
+    sport.id === "nfl" &&
+      activeListings &&
+      place &&
+      market &&
+      nflWeek != null &&
+      nflWeek === activeListings.week,
   );
-  const mapMiss = Boolean(
-    sport.id === "nfl" && coverage && place && samples && !hasSample && nflWeek === coverage.week && coverage.maps.length,
-  );
+  const checking = Boolean(place && (listingsStatus === "loading" || stationsStatus === "loading"));
 
   useEffect(() => {
-    const controller = new AbortController();
-    loadCoverage(controller.signal)
+    let cancel = false;
+    loadListings()
       .then((data) => {
-        setCoverage(data);
-        setCoverageStatus(data ? "ready" : "missing");
-        if (data) setNflWeek((week) => week ?? data.week);
+        if (cancel) return;
+        setStationListings(data);
+        setListingsStatus(data ? "ready" : "missing");
+        if (data?.week) setNflWeek((week) => week ?? data.week);
       })
-      .catch(() => setCoverageStatus("missing"));
-    return () => controller.abort();
+      .catch(() => {
+        if (!cancel) setListingsStatus("missing");
+      });
+    return () => {
+      cancel = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -139,31 +152,6 @@ export function useGuide() {
     };
   }, [place]);
 
-  useEffect(() => {
-    const ready = sport.id === "nfl" && coverage && place && nflWeek === coverage.week;
-    if (!ready) {
-      setSamples(null);
-      setChecking(false);
-      return;
-    }
-    let cancel = false;
-    setSamples(null);
-    setChecking(true);
-    sampleMarket(coverage, place)
-      .then((next) => {
-        if (!cancel) setSamples(next);
-      })
-      .catch(() => {
-        if (!cancel) setSamples(null);
-      })
-      .finally(() => {
-        if (!cancel) setChecking(false);
-      });
-    return () => {
-      cancel = true;
-    };
-  }, [sport.id, coverage, place, nflWeek]);
-
   const requestKey = [
     sport.id,
     sport.id === "nfl" ? (nflWeek ?? "") : "",
@@ -172,15 +160,18 @@ export function useGuide() {
   ].join("|");
 
   useEffect(() => {
-    if (sport.id === "nfl" && nflWeek == null && coverageStatus === "loading") return;
+    if (sport.id === "nfl" && nflWeek == null && listingsStatus === "loading") return;
     const controller = new AbortController();
     const key = requestKey;
+    const refresh = forceRefresh.current;
+    forceRefresh.current = false;
     loadScoreboard(
       sport.id,
       {
         week: sport.schedule === "week" ? (sport.id === "nfl" ? nflWeek : cfbWeek) : null,
-        year: sport.id === "nfl" ? coverage?.year : null,
+        year: null,
         day: sport.schedule === "day" ? day : null,
+        refresh,
       },
       controller.signal,
     )
@@ -195,20 +186,21 @@ export function useGuide() {
         setFailure({ key, message: "The schedule didn’t load. Check your connection and try again." });
       });
     return () => controller.abort();
-  }, [requestKey, sport.id, sport.schedule, nflWeek, cfbWeek, day, coverage, coverageStatus]);
+  }, [requestKey, sport.id, sport.schedule, nflWeek, cfbWeek, day, listingsStatus, reloadToken]);
 
   const scheduleError = failure?.key === requestKey ? failure.message : "";
   const scheduleLoading = board.key !== requestKey && !scheduleError;
-  const listings = useMemo(
+  const games = useMemo(
     () =>
       buildListings({
         espn: board.key === requestKey ? board.games : [],
-        coverage: sport.id === "nfl" && nflWeek === coverage?.week ? coverage : null,
-        samples: mapsApply ? samples : null,
-        mapsApply,
+        airings: localReady && activeListings ? activeListings.games : {},
+        sites: activeListings?.sites ?? {},
+        stations: market?.stations ?? [],
+        localReady,
         team: sport.id === "nfl" ? team : "",
       }),
-    [board, requestKey, sport.id, nflWeek, coverage, samples, mapsApply, team],
+    [board, requestKey, localReady, activeListings, market, sport.id, team],
   );
 
   useEffect(() => {
@@ -230,6 +222,13 @@ export function useGuide() {
     );
   }, [zipReady, place, sport.id, sport.schedule, team, shownWeek, day]);
 
+  function refreshSchedule() {
+    forceRefresh.current = true;
+    setBoard({ key: "", games: [] });
+    setFailure(null);
+    setReloadToken((token) => token + 1);
+  }
+
   function selectPlace(next: Place) {
     setPlace(next);
     setZipInput(placeLabel(next));
@@ -248,8 +247,8 @@ export function useGuide() {
     else setCfbWeek(next);
   }
 
-  const visible = listings.filter((game) =>
-    view === "all" || !mapsApply ? true : game.bucket === "local" || game.bucket === "national",
+  const visible = games.filter((game) =>
+    view === "all" || !localReady ? true : game.bucket === "local" || game.bucket === "national",
   );
 
   return {
@@ -271,18 +270,18 @@ export function useGuide() {
     followed: sport.id === "nfl" ? teamByAbbr(team) : undefined,
     view,
     setView,
-    mapsApply,
-    mapMiss,
-    checking: checking && !hasSample,
-    coverageStatus,
-    mappedWeek: coverage?.week ?? null,
-    onMappedWeek: sport.id === "nfl" && nflWeek === coverage?.week,
-    listings,
+    localReady,
+    checking,
+    listingsStatus,
+    listedWeek: listings?.week ?? null,
+    onListedWeek: sport.id === "nfl" && activeListings != null && nflWeek === activeListings.week,
+    listings: games,
     visible,
     scheduleLoading,
     scheduleError,
+    refreshSchedule,
     periodLabel: sport.schedule === "week" ? `Week ${shownWeek ?? "…"}` : formatDayHeading(day),
-    periodDetail: sport.id === "nfl" && coverage && nflWeek === coverage.week ? coverage.titleDate : "",
+    periodDetail: "",
     step,
     canPrev: sport.schedule === "day" || (shownWeek ?? 1) > 1,
     canNext: sport.schedule === "day" || (shownWeek ?? 1) < 18,
