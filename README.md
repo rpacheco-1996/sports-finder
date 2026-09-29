@@ -32,10 +32,10 @@ src/
   js/theme.js                            light/dark switch
   js/analytics.js                        GA4 wrapper (off until an id is set)
 package.json
-vite.config.js                           base is /
+vite.config.js                           base is /, root is src/
 ```
 
-`chanel-finder/` is the original Boise and Spirit Lake CLI. The live site does not use it.
+`src/` and `public/` are what you edit. `dist/` is the Vite build and is not committed. The files at the repository root (`index.html`, `assets/`, `listings.json`, and the rest) are the copy GitHub Pages serves. `scripts/publish.mjs` writes that copy.
 
 ## Local development
 
@@ -75,6 +75,6 @@ The page starts in light mode. The Dark button sets `data-theme` on `<html>` and
 
 ## Deployment
 
-`public/CNAME` contains `specialpancakes.com`. GitHub Pages must use the `main` branch root. The workflow `.github/workflows/build-and-deploy.yml` runs at 08:00 UTC on Tuesdays and when someone starts it by hand. It scrapes, builds, and commits the published files back to `main`. A failed station download is skipped; an empty ESPN response fails the job. If `main` is protected, allow the GitHub Actions bot to push.
+`public/CNAME` contains `specialpancakes.com`. GitHub Pages must use the `main` branch root. The workflow `.github/workflows/build-and-deploy.yml` runs at 08:00 UTC on Tuesdays and when someone starts it by hand. It scrapes, builds, and commits both `public/listings.json` and the root Pages files (`index.html`, `assets/`, `listings.json`, `places.txt`, `data/markets.json`, `sitemap.xml`, `robots.txt`, `logo.png`, `favicon.ico`, `CNAME`, `.nojekyll`) back to `main`. A failed station download is skipped; an empty ESPN response fails the job. If `main` is protected, allow the GitHub Actions bot to push.
 
 The browser never calls station sites or TV Passport. Only the weekly script does, one request at a time, with a pause and a disk cache in `scripts/cache/listings`.

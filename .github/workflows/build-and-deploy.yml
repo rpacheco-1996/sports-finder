@@ -47,7 +47,22 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html assets public/listings.json public/sitemap.xml public/robots.txt CNAME public/CNAME .nojekyll
+          git add \
+            index.html \
+            assets \
+            listings.json \
+            places.txt \
+            data/markets.json \
+            sitemap.xml \
+            robots.txt \
+            logo.png \
+            favicon.ico \
+            CNAME \
+            .nojekyll \
+            public/listings.json \
+            public/sitemap.xml \
+            public/robots.txt \
+            public/CNAME
           if git diff --cached --quiet; then
             echo "Nothing new to publish."
             exit 0

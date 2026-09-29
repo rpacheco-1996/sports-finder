@@ -189,11 +189,15 @@ function isGeneric(name) {
 }
 
 function classify(game) {
+  const networks = (game.networks || []).filter((name) => !isGeneric(name));
+  const kind = networks.map((name) => name.toUpperCase());
+  if (state.sport !== "nfl") {
+    const national = kind.some((name) => /PRIME|AMAZON|NETFLIX|PEACOCK|ESPN|NFL/.test(name));
+    return { bucket: national ? "national" : "unplaced", sourceUrl: "", callsign: "", ready: false };
+  }
   const listings = activeListings();
   const ready = state.sport === "nfl" && state.place && state.market && listings?.week === state.week;
   const stations = state.market?.stations || [];
-  const networks = (game.networks || []).filter((name) => !isGeneric(name));
-  const kind = networks.map((name) => name.toUpperCase());
   const regional = ["FOX", "CBS", "NBC", "ABC"].find((name) => kind.some((item) => item.includes(name))) || "";
   const station = stations.find((item) => item.network === regional);
   const rows = station && listings ? listings.games[`${station.callsign}|${regional}`] : undefined;
