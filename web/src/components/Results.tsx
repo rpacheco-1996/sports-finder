@@ -80,13 +80,11 @@ function GameRow({
       </div>
       <div className="matchup">
         <p className="side">
-          {game.away.logo ? <img className="logo" src={game.away.logo} alt="" width="28" height="28" /> : <span className="logo" />}
           <span className={game.away.winner ? "is-winner" : undefined}>{game.away.short || game.away.name}</span>
           {game.away.score && <span className="score">{game.away.score}</span>}
         </p>
         {home && (
           <p className="side">
-            {game.home.logo ? <img className="logo" src={game.home.logo} alt="" width="28" height="28" /> : <span className="logo" />}
             <span className={game.home.winner ? "is-winner" : undefined}>{game.home.short || game.home.name}</span>
             {game.home.score && <span className="score">{game.home.score}</span>}
             <span className="sr-only">{game.neutral ? "versus" : "at"}</span>

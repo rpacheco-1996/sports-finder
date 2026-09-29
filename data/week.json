@@ -1,0 +1,277 @@
+{
+  "year": 2026,
+  "week": 3,
+  "titleDate": "September 27, 2026",
+  "fetchedAt": "2026-09-25T20:43:47.182391+00:00",
+  "palette": {
+    "1": [
+      255,
+      129,
+      129
+    ],
+    "2": [
+      131,
+      172,
+      255
+    ],
+    "3": [
+      158,
+      229,
+      158
+    ],
+    "4": [
+      255,
+      255,
+      130
+    ],
+    "5": [
+      255,
+      193,
+      131
+    ],
+    "6": [
+      131,
+      255,
+      255
+    ]
+  },
+  "maps": [
+    {
+      "network": "CBS",
+      "slot": "EARLY",
+      "file": "maps/2026_w03_CBS_EARLY.png"
+    },
+    {
+      "network": "CBS",
+      "slot": "LATE",
+      "file": "maps/2026_w03_CBS_LATE.png"
+    },
+    {
+      "network": "FOX",
+      "slot": "SINGLE",
+      "file": "maps/2026_w03_FOX_SINGLE.png"
+    }
+  ],
+  "outlying": {
+    "AK": {
+      "CBS|EARLY": 2,
+      "CBS|LATE": 1,
+      "FOX|SINGLE": 1
+    },
+    "HI": {
+      "CBS|EARLY": 2,
+      "CBS|LATE": 1,
+      "FOX|SINGLE": 1
+    }
+  },
+  "games": [
+    {
+      "matchup": "Atlanta @ Green Bay",
+      "rawMatchup": "Atlanta @ Green Bay",
+      "annotation": "",
+      "network": "PRIME",
+      "slot": "NATIONAL",
+      "swatch": null,
+      "national": true,
+      "announcers": "Al Michaels, Kirk Herbstreit",
+      "kickoff": "2026-09-25T00:15:00+00:00",
+      "away": "Atlanta Falcons",
+      "home": "Green Bay Packers"
+    },
+    {
+      "matchup": "LA Rams @ Denver",
+      "rawMatchup": "LA Rams @ Denver",
+      "annotation": "",
+      "network": "NBC",
+      "slot": "NATIONAL",
+      "swatch": null,
+      "national": true,
+      "announcers": "Mike Tirico, Cris Collinsworth",
+      "kickoff": "2026-09-28T00:20:00+00:00",
+      "away": "Los Angeles Rams",
+      "home": "Denver Broncos"
+    },
+    {
+      "matchup": "Philadelphia @ Chicago",
+      "rawMatchup": "Philadelphia @ Chicago",
+      "annotation": "",
+      "network": "ESPN",
+      "slot": "NATIONAL",
+      "swatch": null,
+      "national": true,
+      "announcers": "Joe Buck, Troy Aikman",
+      "kickoff": "2026-09-29T00:15:00+00:00",
+      "away": "Philadelphia Eagles",
+      "home": "Chicago Bears"
+    },
+    {
+      "matchup": "Cincinnati @ Pittsburgh",
+      "rawMatchup": "Cincinnati @ Pittsburgh",
+      "annotation": "",
+      "network": "CBS",
+      "slot": "EARLY",
+      "swatch": 1,
+      "national": false,
+      "announcers": "Ian Eagle, Ross Tucker",
+      "kickoff": "2026-09-27T17:00:00+00:00",
+      "away": "Cincinnati Bengals",
+      "home": "Pittsburgh Steelers"
+    },
+    {
+      "matchup": "Kansas City @ Miami",
+      "rawMatchup": "Kansas City @ Miami",
+      "annotation": "",
+      "network": "CBS",
+      "slot": "EARLY",
+      "swatch": 2,
+      "national": false,
+      "announcers": "Kevin Harlan, Trent Green",
+      "kickoff": "2026-09-27T17:00:00+00:00",
+      "away": "Kansas City Chiefs",
+      "home": "Miami Dolphins"
+    },
+    {
+      "matchup": "Tennessee @ NY Giants",
+      "rawMatchup": "Tennessee @ NY Giants",
+      "annotation": "",
+      "network": "CBS",
+      "slot": "EARLY",
+      "swatch": 3,
+      "national": false,
+      "announcers": "Andrew Catalon, Logan Ryan",
+      "kickoff": "2026-09-27T17:00:00+00:00",
+      "away": "Tennessee Titans",
+      "home": "New York Giants"
+    },
+    {
+      "matchup": "New England @ Jacksonville",
+      "rawMatchup": "New England @ Jacksonville",
+      "annotation": "",
+      "network": "CBS",
+      "slot": "EARLY",
+      "swatch": 4,
+      "national": false,
+      "announcers": "Spero Dedes, Adam Archuleta",
+      "kickoff": "2026-09-27T17:00:00+00:00",
+      "away": "New England Patriots",
+      "home": "Jacksonville Jaguars"
+    },
+    {
+      "matchup": "Houston @ Indianapolis",
+      "rawMatchup": "Houston @ Indianapolis",
+      "annotation": "",
+      "network": "CBS",
+      "slot": "EARLY",
+      "swatch": 5,
+      "national": false,
+      "announcers": "Tom McCarthy, Robert Turbin",
+      "kickoff": "2026-09-27T17:00:00+00:00",
+      "away": "Houston Texans",
+      "home": "Indianapolis Colts"
+    },
+    {
+      "matchup": "Baltimore vs Dallas",
+      "rawMatchup": "Baltimore vs Dallas (in Rio de Janeiro)",
+      "annotation": "in Rio de Janeiro",
+      "network": "CBS",
+      "slot": "LATE",
+      "swatch": 1,
+      "national": false,
+      "announcers": "Jim Nantz, J.J. Watt",
+      "kickoff": "2026-09-27T20:25:00+00:00",
+      "away": "Baltimore Ravens",
+      "home": "Dallas Cowboys"
+    },
+    {
+      "matchup": "Las Vegas @ New Orleans",
+      "rawMatchup": "Las Vegas @ New Orleans",
+      "annotation": "",
+      "network": "CBS",
+      "slot": "LATE",
+      "swatch": 2,
+      "national": false,
+      "announcers": "Chris Lewis, Luke Kuechly",
+      "kickoff": "2026-09-27T20:25:00+00:00",
+      "away": "Las Vegas Raiders",
+      "home": "New Orleans Saints"
+    },
+    {
+      "matchup": "LA Chargers @ Buffalo",
+      "rawMatchup": "LA Chargers @ Buffalo",
+      "annotation": "",
+      "network": "FOX",
+      "slot": "SINGLE",
+      "swatch": 1,
+      "national": false,
+      "announcers": "Kevin Burkhardt, Tom Brady",
+      "kickoff": "2026-09-27T17:00:00+00:00",
+      "away": "Los Angeles Chargers",
+      "home": "Buffalo Bills"
+    },
+    {
+      "matchup": "NY Jets @ Detroit",
+      "rawMatchup": "NY Jets @ Detroit",
+      "annotation": "",
+      "network": "FOX",
+      "slot": "SINGLE",
+      "swatch": 3,
+      "national": false,
+      "announcers": "Adam Amin, Drew Brees",
+      "kickoff": "2026-09-27T17:00:00+00:00",
+      "away": "New York Jets",
+      "home": "Detroit Lions"
+    },
+    {
+      "matchup": "Seattle @ Washington",
+      "rawMatchup": "Seattle @ Washington",
+      "annotation": "",
+      "network": "FOX",
+      "slot": "SINGLE",
+      "swatch": 4,
+      "national": false,
+      "announcers": "Joe Davis, Greg Olsen",
+      "kickoff": "2026-09-27T17:00:00+00:00",
+      "away": "Seattle Seahawks",
+      "home": "Washington Commanders"
+    },
+    {
+      "matchup": "Carolina @ Cleveland",
+      "rawMatchup": "Carolina @ Cleveland",
+      "annotation": "",
+      "network": "FOX",
+      "slot": "SINGLE",
+      "swatch": 6,
+      "national": false,
+      "announcers": "Chris Myers, Mark Schlereth",
+      "kickoff": "2026-09-27T17:00:00+00:00",
+      "away": "Carolina Panthers",
+      "home": "Cleveland Browns"
+    },
+    {
+      "matchup": "Minnesota @ Tampa Bay",
+      "rawMatchup": "Minnesota @ Tampa Bay (LATE)",
+      "annotation": "LATE",
+      "network": "FOX",
+      "slot": "SINGLE",
+      "swatch": 2,
+      "national": false,
+      "announcers": "Kenny Albert, Jonathan Vilma",
+      "kickoff": "2026-09-27T20:05:00+00:00",
+      "away": "Minnesota Vikings",
+      "home": "Tampa Bay Buccaneers"
+    },
+    {
+      "matchup": "Arizona @ San Francisco",
+      "rawMatchup": "Arizona @ San Francisco (LATE)",
+      "annotation": "LATE",
+      "network": "FOX",
+      "slot": "SINGLE",
+      "swatch": 5,
+      "national": false,
+      "announcers": "Kevin Kugler, Daryl Johnston",
+      "kickoff": "2026-09-27T20:05:00+00:00",
+      "away": "Arizona Cardinals",
+      "home": "San Francisco 49ers"
+    }
+  ]
+}

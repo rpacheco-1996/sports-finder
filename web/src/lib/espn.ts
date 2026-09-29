@@ -9,7 +9,7 @@ import { sportById, type Side, type SportId } from "../types";
  */
 const SCOREBOARD_ROOT = "https://site.web.api.espn.com/apis/site/v2/sports";
 
-const CACHE_PREFIX = "cf.espn.v1";
+const CACHE_PREFIX = "cf.espn.v2";
 const LIVE_TTL_MS = 60 * 60 * 1000;
 const PAST_TTL_MS = 24 * 60 * 60 * 1000;
 const GENERIC_NETWORK = /^(tbd|tba|national|local|tv|network)?$/i;
@@ -44,7 +44,6 @@ type EspnTeam = {
   abbreviation?: string;
   displayName?: string;
   shortDisplayName?: string;
-  logo?: string;
 };
 
 type EspnCompetitor = {
@@ -99,7 +98,6 @@ function sideFrom(competitor: EspnCompetitor | undefined, state: "pre" | "in" | 
     abbr: team.abbreviation ?? "",
     name: team.displayName ?? "",
     short: team.shortDisplayName || team.abbreviation || "",
-    logo: team.logo ?? "",
     score,
     winner: Boolean(competitor?.winner),
   };

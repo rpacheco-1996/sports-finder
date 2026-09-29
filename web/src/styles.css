@@ -410,16 +410,10 @@ a.clock:hover { color: var(--accent); }
 
 .side {
   display: grid;
-  grid-template-columns: 28px 1fr auto;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
   margin: 0;
-}
-
-.logo {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
 }
 
 .side .is-winner { font-weight: 600; }

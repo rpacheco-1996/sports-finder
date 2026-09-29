@@ -26,7 +26,6 @@ export type Side = {
   abbr: string;
   name: string;
   short: string;
-  logo: string;
   score: string;
   winner: boolean;
 };
