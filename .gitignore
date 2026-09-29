@@ -1,4 +1,8 @@
 node_modules/
+dist/
+scripts/cache/
+web/node_modules/
+web/dist/
 web/dist/
 web/public/data/*
 !web/public/data/.gitkeep

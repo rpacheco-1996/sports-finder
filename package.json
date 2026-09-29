@@ -1,0 +1,14 @@
+{
+  "name": "special-pancakes",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/generateSitemap.js && vite build && node scripts/publish.mjs",
+    "build:sitemap": "node scripts/generateSitemap.js",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^7.1.5"
+  }
+}
