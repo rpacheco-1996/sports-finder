@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build && node scripts/publish-root.mjs",
+    "build": "tsc --noEmit && node scripts/generateSitemap.js && vite build && node scripts/publish-root.mjs",
+    "build:sitemap": "node scripts/generateSitemap.js",
     "preview": "vite preview"
   },
   "dependencies": {

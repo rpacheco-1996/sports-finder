@@ -21,7 +21,12 @@ if (existsSync(resolve(dist, "favicon.svg"))) {
 if (existsSync(resolve(dist, "places.txt"))) {
   cpSync(resolve(dist, "places.txt"), resolve(root, "places.txt"));
 }
-cpSync(resolve(dist, "assets"), resolve(root, "assets"), { recursive: true });
+if (existsSync(resolve(dist, "sitemap.xml"))) {
+  cpSync(resolve(dist, "sitemap.xml"), resolve(root, "sitemap.xml"));
+}
+if (existsSync(resolve(dist, "robots.txt"))) {
+  cpSync(resolve(dist, "robots.txt"), resolve(root, "robots.txt"));
+}
 if (existsSync(resolve(dist, "data"))) {
   mkdirSync(resolve(root, "data"), { recursive: true });
   cpSync(resolve(dist, "data"), resolve(root, "data"), { recursive: true });

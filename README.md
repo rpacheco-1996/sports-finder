@@ -29,7 +29,7 @@ python build_listings.py --week 4
 
 Pages publishes the `main` branch root. `npm run build` writes that site (`index.html` and `assets/`). `.nojekyll` keeps Jekyll from turning this repo into a README page.
 
-The live app is [https://rpacheco-1996.github.io/sports-finder/](https://rpacheco-1996.github.io/sports-finder/).
+The live app is [https://specialpancakes.com/](https://specialpancakes.com/).
 
 `build_listings.py` reads each station’s own listings page first, one request at a time, and caches the page. TV Passport is only used when that station doesn’t publish a guide. The time on a local game links to the station’s website. Kickoff times and other sports come from ESPN. Listings are unofficial.
 

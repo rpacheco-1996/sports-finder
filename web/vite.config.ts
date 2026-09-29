@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Project site: https://rpacheco-1996.github.io/sports-finder/
+// Custom domain serves this repo from the site root.
 export default defineConfig({
-  base: "/sports-finder/",
+  base: "/",
   plugins: [react()],
   server: {
     port: 5173,

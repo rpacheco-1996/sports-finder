@@ -286,9 +286,29 @@ button { cursor: pointer; }
 
 .period { display: flex; align-items: center; gap: 8px; }
 
-.period h1, .period p { margin: 0; }
+.hero {
+  margin: 28px 0 8px;
+}
 
-.period h1 {
+.hero h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.hero p {
+  max-width: 42rem;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.period h2, .period p { margin: 0; }
+
+.period h2 {
   font-family: var(--serif);
   font-size: 34px;
   font-weight: 600;
@@ -349,6 +369,15 @@ button { cursor: pointer; }
   gap: 8px 16px;
   padding: 14px 0;
   border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.game.is-selected {
+  margin: 0 -12px;
+  padding: 14px 12px;
+  border-top-color: transparent;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: 14px;
 }
 
 .game.is-followed {

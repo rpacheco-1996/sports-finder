@@ -3,9 +3,11 @@ import { teamByAbbr } from "../data/teams";
 import type { Place, SportId } from "../types";
 import { SPORTS, sportById } from "../types";
 import { type EspnGame, loadScoreboard } from "./espn";
+import { track } from "./analytics";
 import { buildListings } from "./guide";
 import { listingsForWeek, loadListings, type StationListings } from "./listings";
-import { formatDayHeading, shiftDay, todayKey } from "./time";
+import { applyPageSeo, gameSlug } from "./seo";
+import { formatDayHeading, formatWhen, shiftDay, todayKey } from "./time";
 import { loadPlaces, placeByZip, placeLabel } from "./places";
 import { loadMarkets, marketFor, type MarketRecord } from "./stations";
 import { normalizeZip } from "./zip";
@@ -35,6 +37,7 @@ function initialState() {
     nflWeek: sport === "nfl" && hasWeek ? week : null,
     cfbWeek: sport === "ncaaf" && hasWeek ? week : null,
     day: query.get("day") || todayKey(),
+    game: query.get("game") || "",
   };
 }
 
@@ -48,7 +51,9 @@ export function useGuide() {
   const [nflWeek, setNflWeek] = useState<number | null>(initial.nflWeek);
   const [cfbWeek, setCfbWeek] = useState<number | null>(initial.cfbWeek);
   const [day, setDay] = useState(initial.day);
+  const [gameQuery, setGameQuery] = useState(initial.game);
   const [view, setView] = useState<View>("local");
+  const historyMode = useRef<"replace" | "push">("replace");
   const [listings, setStationListings] = useState<StationListings | null>(null);
   const [listingsStatus, setListingsStatus] = useState<"loading" | "ready" | "missing">("loading");
   const [board, setBoard] = useState<{ key: string; games: EspnGame[] }>({ key: "", games: [] });
@@ -215,12 +220,23 @@ export function useGuide() {
     put("team", sport.id === "nfl" ? team : "");
     put("week", sport.schedule === "week" && shownWeek ? String(shownWeek) : "");
     put("day", sport.schedule === "day" ? day : "");
-    window.history.replaceState(null, "", url);
+    put("game", gameQuery);
+    const next = `${url.pathname}${url.search}`;
+    const current = `${window.location.pathname}${window.location.search}`;
+    if (next !== current) {
+      if (historyMode.current === "push") window.history.pushState(null, "", url);
+      else window.history.replaceState(null, "", url);
+    }
+    historyMode.current = "replace";
     localStorage.setItem(
       PREFS_KEY,
       JSON.stringify({ zip: place?.zip ?? "", sport: sport.id, team }),
     );
-  }, [zipReady, place, sport.id, sport.schedule, team, shownWeek, day]);
+  }, [zipReady, place, sport.id, sport.schedule, team, shownWeek, day, gameQuery]);
+
+  function markHistory() {
+    historyMode.current = "push";
+  }
 
   function refreshSchedule() {
     forceRefresh.current = true;
@@ -237,6 +253,7 @@ export function useGuide() {
   }
 
   function step(delta: number) {
+    markHistory();
     if (sport.schedule === "day") {
       setDay((current) => shiftDay(current, delta));
       return;
@@ -250,13 +267,60 @@ export function useGuide() {
   const visible = games.filter((game) =>
     view === "all" || !localReady ? true : game.bucket === "local" || game.bucket === "national",
   );
+  const shareable = visible.some((game) => gameSlug(game) === gameQuery) ? visible : games;
+  const selectedGame = shareable.find((game) => gameSlug(game) === gameQuery) ?? null;
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedGame) {
+      params.set("sport", sport.id);
+      params.set("game", gameSlug(selectedGame));
+    } else if (sport.id !== "nfl") {
+      params.set("sport", sport.id);
+      if (sport.schedule === "day" && day) params.set("day", day);
+    } else if (shownWeek) {
+      params.set("sport", "nfl");
+      params.set("week", String(shownWeek));
+    }
+    const when = selectedGame ? formatWhen(selectedGame.kickoff, place?.timeZone ?? "UTC") : null;
+    applyPageSeo({
+      sport,
+      game: selectedGame,
+      dateLabel: when?.dayLabel ?? "",
+      canonicalParams: params,
+    });
+  }, [sport, selectedGame, shownWeek, day, place?.timeZone]);
+
+  useEffect(() => {
+    function onPop() {
+      const query = new URLSearchParams(window.location.search);
+      const nextSport = sportById(query.get("sport") || "nfl").id;
+      setSportId(nextSport);
+      const week = Number(query.get("week"));
+      if (Number.isFinite(week) && week > 0) {
+        if (nextSport === "nfl") setNflWeek(week);
+        if (nextSport === "ncaaf") setCfbWeek(week);
+      }
+      const nextDay = query.get("day");
+      if (nextDay) setDay(nextDay);
+      setTeam((query.get("team") || "").toUpperCase());
+      setGameQuery(query.get("game") || "");
+      setView("local");
+    }
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   return {
     sports: SPORTS,
     sport,
     setSportId: (id: SportId) => {
+      if (id === sportId) return;
+      markHistory();
+      setGameQuery("");
       setSportId(id);
       setView("local");
+      track("select_sport", { league: id });
     },
     zipInput,
     setZipInput,
@@ -266,7 +330,22 @@ export function useGuide() {
     market,
     stationsStatus,
     team,
-    setTeam,
+    setTeam: (abbr: string) => {
+      markHistory();
+      setTeam(abbr);
+      const name = teamByAbbr(abbr)?.name;
+      if (name) track("search_team", { team_query: name });
+    },
+    selectedGame,
+    selectGame: (game: { away: { short: string; name: string }; home: { short: string; name: string }; networks: string[] }) => {
+      const slug = gameSlug(game);
+      const opening = gameQuery !== slug;
+      markHistory();
+      setGameQuery(opening ? slug : "");
+      if (!opening) return;
+      const matchup = `${game.away.short || game.away.name} vs ${game.home.short || game.home.name}`;
+      track("view_game_details", { matchup, channel: game.networks[0] || "TBD" });
+    },
     followed: sport.id === "nfl" ? teamByAbbr(team) : undefined,
     view,
     setView,

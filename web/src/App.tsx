@@ -6,6 +6,7 @@ import { Results, Skeleton } from "./components/Results";
 import { loadPlaces, placeByZip } from "./lib/places";
 import { MAJOR_NETWORKS, callsignFor } from "./lib/stations";
 import { useGuide } from "./lib/useGuide";
+import { gameSlug } from "./lib/seo";
 import { formatWhen } from "./lib/time";
 import type { Listing } from "./types";
 
@@ -84,6 +85,11 @@ export function App() {
         </button>
       </header>
 
+      <section className="hero">
+        <h1>Find Your Game&apos;s TV Channel Instantly</h1>
+        <p>No fluff, no ads, no 10-paragraph articles. Just live TV networks and streaming options for NFL, NBA, MLB, NHL, &amp; WNBA.</p>
+      </section>
+
       <form className="finder" onSubmit={onSubmit}>
         <div className="finder-grid">
           <PlaceSearch selectedLabel={guide.place ? guide.zipInput : ""} onSelect={guide.selectPlace} />
@@ -157,7 +163,7 @@ export function App() {
             ‹
           </button>
           <div>
-            <h1>{guide.periodLabel}</h1>
+            <h2>{guide.periodLabel}</h2>
             {guide.periodDetail && <p>{guide.periodDetail}</p>}
           </div>
           <button type="button" className="step" onClick={() => guide.step(1)} disabled={!guide.canNext} aria-label="Next">
@@ -199,6 +205,8 @@ export function App() {
           checking={guide.checking}
           localReady={guide.localReady}
           stations={guide.market?.stations ?? []}
+          selectedSlug={guide.selectedGame ? gameSlug(guide.selectedGame) : ""}
+          onSelect={guide.selectGame}
         />
       )}
 

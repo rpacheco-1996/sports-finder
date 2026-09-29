@@ -1,4 +1,5 @@
 import type { Listing } from "../types";
+import { gameSlug } from "../lib/seo";
 import { callsignFor, type Station } from "../lib/stations";
 import { formatWhen } from "../lib/time";
 
@@ -36,6 +37,8 @@ function GameRow({
   showBadge,
   checking,
   stations,
+  selected,
+  onSelect,
 }: {
   game: Listing;
   timeZone: string;
@@ -43,11 +46,27 @@ function GameRow({
   showBadge: boolean;
   checking: boolean;
   stations: Station[];
+  selected: boolean;
+  onSelect: (game: Listing) => void;
 }) {
   const when = formatWhen(game.kickoff, timeZone);
   const home = game.home.name || game.home.short;
   return (
-    <article className={`game${game.followed ? " is-followed" : ""}${game.state === "in" ? " is-live" : ""}`}>
+    <article
+      className={`game${game.followed ? " is-followed" : ""}${game.state === "in" ? " is-live" : ""}${selected ? " is-selected" : ""}`}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest("a")) return;
+        onSelect(game);
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        onSelect(game);
+      }}
+    >
       <div className="when">
         {game.sourceUrl ? (
           <a className="clock" href={game.sourceUrl} target="_blank" rel="noreferrer">
@@ -113,6 +132,8 @@ function DayList({
   showBadge,
   checking,
   stations,
+  selectedSlug,
+  onSelect,
 }: {
   games: Listing[];
   timeZone: string;
@@ -120,6 +141,8 @@ function DayList({
   showBadge: boolean;
   checking: boolean;
   stations: Station[];
+  selectedSlug: string;
+  onSelect: (game: Listing) => void;
 }) {
   return (
     <>
@@ -127,7 +150,17 @@ function DayList({
         <section key={group.key} className="day">
           <h3>{group.label}</h3>
           {group.games.map((game) => (
-            <GameRow key={game.id} game={game} timeZone={timeZone} city={city} showBadge={showBadge} checking={checking} stations={stations} />
+            <GameRow
+              key={game.id}
+              game={game}
+              timeZone={timeZone}
+              city={city}
+              showBadge={showBadge}
+              checking={checking}
+              stations={stations}
+              selected={selectedSlug === gameSlug(game)}
+              onSelect={onSelect}
+            />
           ))}
         </section>
       ))}
@@ -143,6 +176,8 @@ export function Results({
   checking,
   localReady,
   stations,
+  selectedSlug,
+  onSelect,
 }: {
   games: Listing[];
   view: "local" | "all";
@@ -151,7 +186,10 @@ export function Results({
   checking: boolean;
   localReady: boolean;
   stations: Station[];
+  selectedSlug: string;
+  onSelect: (game: Listing) => void;
 }) {
+  const list = { timeZone, city, checking, stations, selectedSlug, onSelect };
   if (view === "local" && localReady) {
     const local = games.filter((game) => game.bucket === "local");
     const national = games.filter((game) => game.bucket === "national");
@@ -160,7 +198,7 @@ export function Results({
         {local.length > 0 && (
           <section>
             <h2 className="section-label">Local channels</h2>
-            <DayList games={local} timeZone={timeZone} city={city} showBadge={false} checking={checking} stations={stations} />
+            <DayList games={local} showBadge={false} {...list} />
           </section>
         )}
         {local.length === 0 && (
@@ -169,7 +207,7 @@ export function Results({
         {national.length > 0 && (
           <section>
             <h2 className="section-label">National & streaming</h2>
-            <DayList games={national} timeZone={timeZone} city={city} showBadge={false} checking={checking} stations={stations} />
+            <DayList games={national} showBadge={false} {...list} />
           </section>
         )}
       </div>
@@ -182,7 +220,7 @@ export function Results({
 
   return (
     <div className="results">
-      <DayList games={games} timeZone={timeZone} city={city} showBadge={localReady || checking} checking={checking} stations={stations} />
+      <DayList games={games} showBadge={localReady || checking} {...list} />
     </div>
   );
 }
