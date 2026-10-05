@@ -1,37 +1,22 @@
 name: Build and deploy
 
 on:
-  schedule:
-    - cron: "0 8 * * 2"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: weekly-listings
+  group: site-deploy
   cancel-in-progress: false
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Restore the listing cache
-        uses: actions/cache@v4
-        with:
-          path: scripts/cache/listings
-          key: station-listings-${{ github.run_id }}
-          restore-keys: station-listings-
-
-      - name: Build station schedules
-        run: python scripts/build_listings.py
 
       - uses: actions/setup-node@v4
         with:
@@ -47,10 +32,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add \
             index.html \
             assets \
-            listings.json \
+            listings \
             places.txt \
             data/markets.json \
             sitemap.xml \
@@ -59,13 +45,15 @@ jobs:
             favicon.ico \
             CNAME \
             .nojekyll \
-            public/listings.json \
+            public/listings \
             public/sitemap.xml \
             public/robots.txt \
             public/CNAME
+
           if git diff --cached --quiet; then
             echo "Nothing new to publish."
             exit 0
           fi
-          git commit -m "Publish station schedules for the current NFL week"
+
+          git commit -m "Build and deploy site"
           git push

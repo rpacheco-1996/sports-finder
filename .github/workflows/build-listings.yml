@@ -1,0 +1,105 @@
+name: Build sports listings
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: sports-listings
+  cancel-in-progress: false
+
+jobs:
+  nfl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - uses: actions/cache@v4
+        with:
+          path: scripts/cache/listings
+          key: listings-nfl-${{ github.run_id }}
+          restore-keys: listings-nfl-
+
+      - name: Build NFL listings
+        run: python scripts/listings/build.py nfl
+
+  mlb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - uses: actions/cache@v4
+        with:
+          path: scripts/cache/listings
+          key: listings-mlb-${{ github.run_id }}
+          restore-keys: listings-mlb-
+
+      - name: Build MLB listings
+        run: python scripts/listings/build.py mlb
+
+  nba:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - uses: actions/cache@v4
+        with:
+          path: scripts/cache/listings
+          key: listings-nba-${{ github.run_id }}
+          restore-keys: listings-nba-
+
+      - name: Build NBA listings
+        run: python scripts/listings/build.py nba
+
+  nhl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - uses: actions/cache@v4
+        with:
+          path: scripts/cache/listings
+          key: listings-nhl-${{ github.run_id }}
+          restore-keys: listings-nhl-
+
+      - name: Build NHL listings
+        run: python scripts/listings/build.py nhl
+
+  wnba:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - uses: actions/cache@v4
+        with:
+          path: scripts/cache/listings
+          key: listings-wnba-${{ github.run_id }}
+          restore-keys: listings-wnba-
+
+      - name: Build WNBA listings
+        run: python scripts/listings/build.py wnba
